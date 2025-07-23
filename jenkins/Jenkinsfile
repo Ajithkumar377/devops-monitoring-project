@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "ajithkumar377/devops-monitoring"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo "🔄 Cloning GitHub repo..."
+                git branch: 'main', url: 'https://github.com/Ajithkumar377/devops-monitoring-project.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "🐳 Building Docker image..."
+                script {
+                    dockerImage = docker.build("${IMAGE_NAME}:latest", "./docker")
+                }
+            }
+        }
+
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                echo "📤 Pushing image to Docker Hub..."
+                script {
+                    docker.withRegistry('', 'dockerhub-credentials') {
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline succeeded and image pushed to Docker Hub."
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs for errors."
+        }
+    }
+}
+
